@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
+const childrenRoutes = require('./routes/children');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -58,6 +59,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.static('public'));
 app.use('/auth', authRoutes);
+app.use('/children', childrenRoutes);
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 

@@ -14,6 +14,8 @@
       --border: #e3e3e3;
       --get: #0a7d4f;
       --post: #0a6ad6;
+      --put: #f59e0b;
+      --delete: #ef4444;
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -48,6 +50,8 @@
     .method { font-weight: 700; margin-right: 8px; text-transform: uppercase; }
     .get { color: var(--get); }
     .post { color: var(--post); }
+    .put { color: var(--put); }
+    .delete { color: var(--delete); }
     pre {
       background: var(--bg);
       border: 1px solid var(--border);
@@ -72,6 +76,11 @@
       <strong>Endpoints</strong>
       <a href="#health">GET /health</a>
       <a href="#login">POST /auth/login</a>
+      <a href="#add-child">POST /children</a>
+      <a href="#list-children">GET /children</a>
+      <a href="#get-child">GET /children/:id</a>
+      <a href="#update-child">PUT /children/:id</a>
+      <a href="#delete-child">DELETE /children/:id</a>
       <a href="#notes">Notes</a>
     </div>
     <div class="content">
@@ -99,6 +108,110 @@
           <li>200: <code>{ "token": "&lt;jwt&gt;", "created": false }</code> (existing user)</li>
           <li>400: missing fields</li>
           <li>401: invalid credentials (existing user, wrong password)</li>
+          <li>500: internal error</li>
+        </ul>
+      </div>
+
+      <div class="card" id="add-child">
+        <div><span class="method post">POST</span><span class="path">/children</span></div>
+        <div class="tag">Protected</div>
+        <p>Add a new child. Automatically creates parent-child relationship.</p>
+        <div>Request headers:</div>
+        <pre>Authorization: Bearer &lt;jwt_token&gt;</pre>
+        <div>Request body:</div>
+        <pre>{
+  "child_name": "福福",
+  "gender": "男",
+  "age": 8,
+  "grade": "小学·二年级",
+  "avatar": "https://example.com/avatar.jpg",
+  "remark": "老大",
+  "relation_type": 1
+}</pre>
+        <div>Field descriptions:</div>
+        <ul>
+          <li><code>child_name</code> (required): Child's name</li>
+          <li><code>gender</code> (optional): "男" or "女" (converted to 1 or 2)</li>
+          <li><code>age</code> (optional): Child's age</li>
+          <li><code>grade</code> (optional): Grade string like "小学·二年级", "幼儿园大班", etc.</li>
+          <li><code>avatar</code> (optional): Avatar URL</li>
+          <li><code>remark</code> (optional): Parent's remark</li>
+          <li><code>relation_type</code> (optional, default 1): 1=父亲, 2=母亲, 3=祖父母, 4=其他</li>
+        </ul>
+        <div>Responses:</div>
+        <ul>
+          <li>201: <code>{ "message": "Child added successfully", "data": {...} }</code></li>
+          <li>400: missing required fields</li>
+          <li>401: unauthorized (no/invalid token)</li>
+          <li>500: internal error</li>
+        </ul>
+      </div>
+
+      <div class="card" id="list-children">
+        <div><span class="method get">GET</span><span class="path">/children</span></div>
+        <div class="tag">Protected</div>
+        <p>Get all children of the current user.</p>
+        <div>Request headers:</div>
+        <pre>Authorization: Bearer &lt;jwt_token&gt;</pre>
+        <div>Responses:</div>
+        <ul>
+          <li>200: <code>{ "message": "Success", "data": [...] }</code></li>
+          <li>401: unauthorized</li>
+          <li>500: internal error</li>
+        </ul>
+      </div>
+
+      <div class="card" id="get-child">
+        <div><span class="method get">GET</span><span class="path">/children/:id</span></div>
+        <div class="tag">Protected</div>
+        <p>Get a specific child's details. Only accessible if the child belongs to the current user.</p>
+        <div>Request headers:</div>
+        <pre>Authorization: Bearer &lt;jwt_token&gt;</pre>
+        <div>Responses:</div>
+        <ul>
+          <li>200: <code>{ "message": "Success", "data": {...} }</code></li>
+          <li>401: unauthorized</li>
+          <li>404: child not found or access denied</li>
+          <li>500: internal error</li>
+        </ul>
+      </div>
+
+      <div class="card" id="update-child">
+        <div><span class="method put">PUT</span><span class="path">/children/:id</span></div>
+        <div class="tag">Protected</div>
+        <p>Update a child's information. Only fields provided will be updated.</p>
+        <div>Request headers:</div>
+        <pre>Authorization: Bearer &lt;jwt_token&gt;</pre>
+        <div>Request body (all fields optional):</div>
+        <pre>{
+  "child_name": "福福",
+  "gender": "女",
+  "age": 9,
+  "grade": "小学·三年级",
+  "avatar": "https://example.com/new-avatar.jpg",
+  "remark": "Updated remark"
+}</pre>
+        <div>Responses:</div>
+        <ul>
+          <li>200: <code>{ "message": "Child updated successfully", "data": {...} }</code></li>
+          <li>400: no fields to update</li>
+          <li>401: unauthorized</li>
+          <li>404: child not found or access denied</li>
+          <li>500: internal error</li>
+        </ul>
+      </div>
+
+      <div class="card" id="delete-child">
+        <div><span class="method delete">DELETE</span><span class="path">/children/:id</span></div>
+        <div class="tag">Protected</div>
+        <p>Remove parent-child relationship (soft delete). The child record remains in database but is no longer associated with the current user.</p>
+        <div>Request headers:</div>
+        <pre>Authorization: Bearer &lt;jwt_token&gt;</pre>
+        <div>Responses:</div>
+        <ul>
+          <li>200: <code>{ "message": "Child relationship removed successfully" }</code></li>
+          <li>401: unauthorized</li>
+          <li>404: child not found or access denied</li>
           <li>500: internal error</li>
         </ul>
       </div>
