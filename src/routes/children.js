@@ -58,9 +58,9 @@ const parseGrade = (gradeStr) => {
 
 // 性别转换：前端"男"/"女" -> 数据库 1/2
 const parseGender = (genderStr) => {
-  if (!genderStr) return 0;
-  if (genderStr === '男' || genderStr === '1' || genderStr === 1) return 1;
-  if (genderStr === '女' || genderStr === '2' || genderStr === 2) return 2;
+  if (!genderStr) return -1;
+  if (genderStr === '男' || genderStr === '0' || genderStr === 0) return 0;
+  if (genderStr === '女' || genderStr === '1' || genderStr === 1) return 1;
   return 0;
 };
 
@@ -71,7 +71,7 @@ router.post('/', authenticate, async (req, res) => {
   // 验证必填字段
   if (!child_name) {
     return res.status(400).json({ message: 'child_name is required' });
-  }
+  } 
 
   try {
     const connection = await db.getConnection();
