@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API Documentation</title>
+  <title>FocusGames 接口文档</title>
   <style>
     :root {
       color-scheme: light dark;
@@ -34,9 +34,10 @@
       color: var(--text);
     }
     h1, h2 { margin: 0 0 10px; }
-    .wrap { max-width: 960px; margin: 0 auto; display: flex; gap: 24px; }
-    .nav { width: 200px; position: sticky; top: 16px; align-self: flex-start; }
-    .nav a { display: block; padding: 8px 0; color: var(--post); text-decoration: none; }
+    .wrap { max-width: 1024px; margin: 0 auto; display: flex; gap: 24px; }
+    .nav { width: 230px; position: sticky; top: 16px; align-self: flex-start; }
+    .nav a { display: block; padding: 4px 0; color: var(--post); text-decoration: none; font-size: 14px; }
+    .nav a:hover { text-decoration: underline; }
     .content { flex: 1; }
     .card {
       background: var(--card);
@@ -58,12 +59,14 @@
       border-radius: 8px;
       padding: 12px;
       overflow: auto;
-      margin: 12px 0 0;
+      margin: 8px 0 0;
+      font-size: 13px;
     }
-    ul { margin: 8px 0 0 18px; color: var(--muted); }
+    ul { margin: 8px 0 0 18px; color: var(--muted); font-size: 13px; }
     li { margin: 4px 0; }
-    .tag { display: inline-block; padding: 2px 6px; border-radius: 6px; background: var(--border); color: var(--text); font-size: 12px; }
-    @media (max-width: 800px) {
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .tag { display: inline-block; padding: 2px 6px; border-radius: 6px; background: var(--border); color: var(--text); font-size: 12px; margin: 4px 0; }
+    @media (max-width: 900px) {
       .wrap { flex-direction: column; }
       .nav { width: 100%; position: static; display: flex; gap: 12px; flex-wrap: wrap; }
       .nav a { padding: 6px 10px; background: var(--card); border-radius: 8px; border: 1px solid var(--border); }
@@ -73,52 +76,84 @@
 <body>
   <div class="wrap">
     <div class="nav">
-      <strong>Endpoints</strong>
+      <strong>接口列表</strong>
       <a href="#health">GET /health</a>
       <a href="#login">POST /auth/login</a>
+
+      <strong>儿童信息</strong>
       <a href="#add-child">POST /children</a>
       <a href="#list-children">GET /children</a>
       <a href="#get-child">GET /children/:id</a>
       <a href="#update-child">PUT /children/:id</a>
+      <a href="#update-child-letter">PUT /children/:id/letter</a>
       <a href="#delete-child">DELETE /children/:id</a>
-      <a href="#notes">Notes</a>
+
+      <strong>事项字典（通用待办模板）</strong>
+      <a href="#list-todo-items">GET /todo-items</a>
+      <a href="#get-todo-item">GET /todo-items/:id</a>
+      <a href="#add-todo-item">POST /todo-items</a>
+      <a href="#update-todo-item">PUT /todo-items/:id</a>
+      <a href="#delete-todo-item">DELETE /todo-items/:id</a>
+
+      <strong>每日待办（计划）</strong>
+      <a href="#submit-daily-todos">POST /daily-todos</a>
+      <a href="#list-daily-todos">GET /daily-todos</a>
+      <a href="#get-daily-todo">GET /daily-todos/:id</a>
+      <a href="#update-daily-todo">PUT /daily-todos/:id</a>
+      <a href="#delete-daily-todo">DELETE /daily-todos/:id</a>
+
+      <strong>打卡记录</strong>
+      <a href="#update-checkin">PUT /checkin/:daily_todo_id</a>
+      <a href="#get-checkin">GET /checkin/:daily_todo_id</a>
+      <a href="#checkin-by-date">GET /checkin/date/:date</a>
+      <a href="#checkin-by-month">GET /checkin/month/:year/:month</a>
+
+      <a href="#notes">说明</a>
     </div>
+
     <div class="content">
-      <h1>API Documentation</h1>
+      <h1>FocusGames 后端接口文档</h1>
+
+      <!-- 健康检查 -->
       <div class="card" id="health">
         <div><span class="method get">GET</span><span class="path">/health</span></div>
-        <div class="tag">Public</div>
-        <p>Service health check.</p>
+        <div class="tag">公开</div>
+        <p>健康检查接口，用于检测服务是否正常启动。</p>
         <pre>{ "status": "ok" }</pre>
       </div>
 
+      <!-- 登录（含自动注册） -->
       <div class="card" id="login">
         <div><span class="method post">POST</span><span class="path">/auth/login</span></div>
-        <div class="tag">Public</div>
-        <p>Login-or-Register: if the user exists, login; if not, auto-register then return JWT.</p>
-        <div>Request body:</div>
+        <div class="tag">公开</div>
+        <p>
+          登录 / 注册一体化接口：  
+          若手机号不存在则自动注册并登录；若已存在则校验密码后登录。
+        </p>
+        <div>请求体：</div>
         <pre>{
   "phoneNumber": "13xxxxxxx",
   "password": "PlainText123",
-  "name": "Optional Name"
+  "name": "可选昵称"
 }</pre>
-        <div>Responses:</div>
+        <div>响应：</div>
         <ul>
-          <li>201: <code>{ "token": "&lt;jwt&gt;", "created": true }</code> (new user)</li>
-          <li>200: <code>{ "token": "&lt;jwt&gt;", "created": false }</code> (existing user)</li>
-          <li>400: missing fields</li>
-          <li>401: invalid credentials (existing user, wrong password)</li>
-          <li>500: internal error</li>
+          <li>201：<code>{ "token": "&lt;jwt&gt;", "created": true }</code>（新用户，注册 + 登录）</li>
+          <li>200：<code>{ "token": "&lt;jwt&gt;", "created": false }</code>（老用户，登录）</li>
+          <li>400：缺少手机号或密码</li>
+          <li>401：密码错误</li>
+          <li>500：服务器内部错误</li>
         </ul>
       </div>
 
+      <!-- 添加儿童 -->
       <div class="card" id="add-child">
         <div><span class="method post">POST</span><span class="path">/children</span></div>
-        <div class="tag">Protected</div>
-        <p>Add a new child. Automatically creates parent-child relationship.</p>
-        <div>Request headers:</div>
+        <div class="tag">需登录</div>
+        <p>为当前家长账号添加一个孩子，并自动建立亲子关系。</p>
+        <div>请求头：</div>
         <pre>Authorization: Bearer &lt;jwt_token&gt;</pre>
-        <div>Request body:</div>
+        <div>请求体：</div>
         <pre>{
   "child_name": "福福",
   "gender": "男",
@@ -126,107 +161,381 @@
   "grade": "小学·二年级",
   "avatar": "https://example.com/avatar.jpg",
   "remark": "老大",
-  "relation_type": 1
+  "relation_type": 1,
+  "parent_letter": "写给孩子的信件内容"
 }</pre>
-        <div>Field descriptions:</div>
+        <div>字段说明：</div>
         <ul>
-          <li><code>child_name</code> (required): Child's name</li>
-          <li><code>gender</code> (optional): "男" or "女" (converted to 0 or 1)</li>
-          <li><code>age</code> (optional): Child's age</li>
-          <li><code>grade</code> (optional): Grade string like "小学·二年级", "幼儿园大班", etc.</li>
-          <li><code>avatar</code> (optional): Avatar URL</li>
-          <li><code>remark</code> (optional): Parent's remark</li>
-          <li><code>relation_type</code> (optional, default 1): 1=父亲, 2=母亲, 3=祖父母, 4=其他</li>
+          <li><code>child_name</code>（必填）：孩子的小名 / 昵称</li>
+          <li><code>gender</code>（可选）：<code>男</code> 或 <code>女</code>（会转换为 1/2）</li>
+          <li><code>age</code>（可选）：年龄（整数）</li>
+          <li><code>grade</code>（可选）：年级字符串，如 “小学·二年级”、“幼儿园大班”</li>
+          <li><code>avatar</code>（可选）：头像 URL</li>
+          <li><code>remark</code>（可选）：家长备注，如“老大”、“走读”</li>
+          <li><code>relation_type</code>（可选，默认 1）：1=父亲，2=母亲，3=祖父母，4=其他</li>
+          <li><code>parent_letter</code>（可选）：家长写给孩子的信件内容；不传时使用默认模板（<code>parent-child_love_letter.md</code>），模板中可含占位符 <code>[childName]</code>、<code>[gender]</code></li>
         </ul>
-        <div>Responses:</div>
+        <div>响应：</div>
         <ul>
-          <li>201: <code>{ "message": "Child added successfully", "data": {...} }</code></li>
-          <li>400: missing required fields</li>
-          <li>401: unauthorized (no/invalid token)</li>
-          <li>500: internal error</li>
+          <li>201：<code>{ "message": "Child added successfully", "data": {...} }</code></li>
+          <li>400：缺少必填字段</li>
+          <li>401：未登录 / token 无效</li>
+          <li>500：服务器内部错误</li>
         </ul>
       </div>
 
+      <!-- 儿童列表 -->
       <div class="card" id="list-children">
         <div><span class="method get">GET</span><span class="path">/children</span></div>
-        <div class="tag">Protected</div>
-        <p>Get all children of the current user.</p>
-        <div>Request headers:</div>
-        <pre>Authorization: Bearer &lt;jwt_token&gt;</pre>
-        <div>Responses:</div>
+        <div class="tag">需登录</div>
+        <p>获取当前家长名下所有有效的孩子列表。每条数据包含 <code>parent_letter</code>（家长信件内容）。返回时 <code>[childName]</code> 已替换为孩子名字，<code>[gender]</code> 已替换为孩子性别（男/女）。</p>
+        <div>响应：</div>
         <ul>
-          <li>200: <code>{ "message": "Success", "data": [...] }</code></li>
-          <li>401: unauthorized</li>
-          <li>500: internal error</li>
+          <li>200：<code>{ "message": "Success", "data": [ ... ] }</code></li>
+          <li>401：未登录</li>
+          <li>500：服务器内部错误</li>
         </ul>
       </div>
 
+      <!-- 儿童详情 -->
       <div class="card" id="get-child">
         <div><span class="method get">GET</span><span class="path">/children/:id</span></div>
-        <div class="tag">Protected</div>
-        <p>Get a specific child's details. Only accessible if the child belongs to the current user.</p>
-        <div>Request headers:</div>
-        <pre>Authorization: Bearer &lt;jwt_token&gt;</pre>
-        <div>Responses:</div>
+        <div class="tag">需登录</div>
+        <p>获取单个孩子详情，仅允许访问自己名下的孩子。返回数据包含 <code>parent_letter</code>（家长信件内容）。返回时 <code>[childName]</code> 已替换为孩子名字，<code>[gender]</code> 已替换为孩子性别（男/女）。</p>
+        <div>响应：</div>
         <ul>
-          <li>200: <code>{ "message": "Success", "data": {...} }</code></li>
-          <li>401: unauthorized</li>
-          <li>404: child not found or access denied</li>
-          <li>500: internal error</li>
+          <li>200：<code>{ "message": "Success", "data": {...} }</code></li>
+          <li>401：未登录</li>
+          <li>404：孩子不存在或不属于当前家长</li>
+          <li>500：服务器内部错误</li>
         </ul>
       </div>
 
+      <!-- 更新儿童 -->
       <div class="card" id="update-child">
         <div><span class="method put">PUT</span><span class="path">/children/:id</span></div>
-        <div class="tag">Protected</div>
-        <p>Update a child's information. Only fields provided will be updated.</p>
-        <div>Request headers:</div>
-        <pre>Authorization: Bearer &lt;jwt_token&gt;</pre>
-        <div>Request body (all fields optional):</div>
-        <pre>{
-  "child_name": "福福",
-  "gender": "女",
-  "age": 9,
-  "grade": "小学·三年级",
-  "avatar": "https://example.com/new-avatar.jpg",
-  "remark": "Updated remark"
-}</pre>
-        <div>Responses:</div>
+        <div class="tag">需登录</div>
+        <p>更新孩子信息，只更新传入的字段。支持更新 <code>parent_letter</code>（家长信件内容）。请求体字段可选：<code>child_name</code>、<code>gender</code>、<code>age</code>、<code>grade</code>、<code>avatar</code>、<code>remark</code>、<code>parent_letter</code>。</p>
+        <div>响应：</div>
         <ul>
-          <li>200: <code>{ "message": "Child updated successfully", "data": {...} }</code></li>
-          <li>400: no fields to update</li>
-          <li>401: unauthorized</li>
-          <li>404: child not found or access denied</li>
-          <li>500: internal error</li>
+          <li>200：<code>{ "message": "Child updated successfully", "data": {...} }</code></li>
+          <li>400：没有任何可更新字段</li>
+          <li>401：未登录</li>
+          <li>404：孩子不存在或不属于当前家长</li>
+          <li>500：服务器内部错误</li>
         </ul>
       </div>
 
+      <!-- 更新儿童信件 -->
+      <div class="card" id="update-child-letter">
+        <div><span class="method put">PUT</span><span class="path">/children/:id/letter</span></div>
+        <div class="tag">需登录</div>
+        <p>仅更新指定孩子的家长信件内容（<code>parent_letter</code>）。请求体只含信件内容，返回更新后的孩子信息（含已替换占位符的 <code>parent_letter</code>）。</p>
+        <div>请求体：</div>
+        <pre>{
+  "parent_letter": "写给孩子的信件内容，可含占位符 [childName]、[gender]，返回时会替换为孩子名字和性别。"
+}</pre>
+        <div>响应：</div>
+        <ul>
+          <li>200：<code>{ "message": "Letter updated successfully", "data": {...} }</code></li>
+          <li>401：未登录</li>
+          <li>404：孩子不存在或不属于当前家长</li>
+          <li>500：服务器内部错误</li>
+        </ul>
+      </div>
+
+      <!-- 删除儿童（解除关系） -->
       <div class="card" id="delete-child">
         <div><span class="method delete">DELETE</span><span class="path">/children/:id</span></div>
-        <div class="tag">Protected</div>
-        <p>Remove parent-child relationship (soft delete). The child record remains in database but is no longer associated with the current user.</p>
-        <div>Request headers:</div>
-        <pre>Authorization: Bearer &lt;jwt_token&gt;</pre>
-        <div>Responses:</div>
+        <div class="tag">需登录</div>
+        <p>解除与某个孩子的亲子关系（软删除，只改关系，不删孩子记录）。</p>
+        <div>响应：</div>
         <ul>
-          <li>200: <code>{ "message": "Child relationship removed successfully" }</code></li>
-          <li>401: unauthorized</li>
-          <li>404: child not found or access denied</li>
-          <li>500: internal error</li>
+          <li>200：<code>{ "message": "Child relationship removed successfully" }</code></li>
+          <li>401：未登录</li>
+          <li>404：孩子不存在或不属于当前家长</li>
+          <li>500：服务器内部错误</li>
         </ul>
       </div>
 
-      <div class="card" id="notes">
-        <h2>Notes</h2>
+      <!-- 通用事项字典：列表 -->
+      <div class="card" id="list-todo-items">
+        <div><span class="method get">GET</span><span class="path">/todo-items</span></div>
+        <div class="tag">需登录</div>
+        <p>查询通用事项字典，默认返回“系统默认事项 + 当前家长自定义事项”。</p>
+        <div>查询参数（全部可选）：</div>
         <ul>
-          <li>Base URL: <code>http://localhost:3000</code></li>
-          <li>Content-Type: <code>application/json</code></li>
-          <li>Use header: <code>Authorization: Bearer &lt;jwt&gt;</code> for protected APIs.</li>
-          <li>Passwords hashed with bcrypt (10 rounds).</li>
+          <li><code>item_type</code>：1=孩子事项，2=家长事项</li>
+          <li><code>item_category</code>：分类，如“学习类”、“生活类”、“亲子类”</li>
+          <li><code>is_default</code>：1=系统默认，0=用户自定义</li>
+          <li><code>status</code>：1=有效，0=禁用（默认只返回有效）</li>
+          <li><code>creator_id</code>：指定创建人ID（不传则为系统 + 当前用户）</li>
+          <li><code>path_url</code>：前端跳转路径URL，如“/pages/game/detail/schulte-detail”</li>
+        </ul>
+        <div>响应：</div>
+        <ul>
+          <li>200：<code>{ "message": "Success", "data": [ ... ] }</code></li>
+          <li>401：未登录</li>
+          <li>500：服务器内部错误</li>
+        </ul>
+      </div>
+
+      <!-- 单个事项 -->
+      <div class="card" id="get-todo-item">
+        <div><span class="method get">GET</span><span class="path">/todo-items/:id</span></div>
+        <div class="tag">需登录</div>
+        <p>查询单个事项详情。若为用户自定义事项，只允许创建者访问。</p>
+        <div>响应：</div>
+        <ul>
+          <li>200：<code>{ "message": "Success", "data": {...} }</code></li>
+          <li>401：未登录</li>
+          <li>403：无权限访问该自定义事项</li>
+          <li>404：事项不存在</li>
+          <li>500：服务器内部错误</li>
+        </ul>
+      </div>
+
+      <!-- 新增事项 -->
+      <div class="card" id="add-todo-item">
+        <div><span class="method post">POST</span><span class="path">/todo-items</span></div>
+        <div class="tag">需登录</div>
+        <p>新增用户自定义事项（系统默认事项由后台初始化，不通过此接口创建）。</p>
+        <div>请求体：</div>
+        <pre>{
+  "item_name": "早起刷牙",
+  "item_type": 1,
+  "item_category": "生活类",
+  "path_url": "/pages/game/detail/schulte-detail",
+  "completion_type": 1,
+  "completion_target": null,
+  "completion_unit": null
+}</pre>
+        <div>字段说明：</div>
+        <ul>
+          <li><code>item_name</code>（必填）：事项名称，例如“早起刷牙”、“完成作业”、“陪孩子阅读30分钟”</li>
+          <li><code>item_type</code>（必填）：1=孩子事项，2=家长事项</li>
+          <li><code>item_category</code>（可选）：分类标签</li>
+          <li><code>path_url</code>（可选）：前端跳转路由路径，如"/pages/game/detail/schulte-detail"</li>
+          <li><code>completion_type</code>（可选，默认 1）：完成类型，1=一次即完成，2=按次数完成，3=按时长完成</li>
+          <li><code>completion_target</code>（可选）：目标值；类型 2 时为目标次数（如 3），类型 3 时为目标时长数值；类型 2/3 时必填且 ≥1</li>
+          <li><code>completion_unit</code>（可选）：仅类型 3 使用，时长单位：<code>minute</code> / <code>second</code>，缺省为分钟</li>
+        </ul>
+        <div>响应：</div>
+        <ul>
+          <li>201：创建成功</li>
+          <li>400：缺少必填或类型不合法</li>
+          <li>401：未登录</li>
+          <li>409：同名事项已存在</li>
+          <li>500：服务器内部错误</li>
+        </ul>
+      </div>
+
+      <!-- 更新事项 -->
+      <div class="card" id="update-todo-item">
+        <div><span class="method put">PUT</span><span class="path">/todo-items/:id</span></div>
+        <div class="tag">需登录</div>
+        <p>更新用户自定义事项（系统默认事项不可修改）。</p>
+        <div>请求体（所有字段可选）：</div>
+        <pre>{
+  "item_name": "早起刷牙",
+  "item_type": 1,
+  "item_category": "生活类",
+  "path_url": "/pages/game/detail/schulte-detail",
+  "status": 1,
+  "completion_type": 1,
+  "completion_target": null,
+  "completion_unit": null
+}</pre>
+        <div>字段说明：</div>
+        <ul>
+          <li><code>item_name</code>（可选）：事项名称</li>
+          <li><code>item_type</code>（可选）：1=孩子事项，2=家长事项</li>
+          <li><code>item_category</code>（可选）：分类标签</li>
+          <li><code>path_url</code>（可选）：前端跳转路由路径</li>
+          <li><code>status</code>（可选）：1=有效，0=禁用</li>
+          <li><code>completion_type</code>（可选）：1=一次即完成，2=按次数，3=按时长</li>
+          <li><code>completion_target</code>（可选）：目标值（次数或时长数值）</li>
+          <li><code>completion_unit</code>（可选）：时长单位，仅类型 3 使用</li>
+        </ul>
+        <div>响应：</div>
+        <ul>
+          <li>200：更新成功</li>
+          <li>400：无可更新字段 / 类型不合法</li>
+          <li>401：未登录</li>
+          <li>403：系统默认事项或他人事项，禁止修改</li>
+          <li>404：事项不存在</li>
+          <li>409：与其他事项重名</li>
+          <li>500：服务器内部错误</li>
+        </ul>
+      </div>
+
+      <!-- 删除事项 -->
+      <div class="card" id="delete-todo-item">
+        <div><span class="method delete">DELETE</span><span class="path">/todo-items/:id</span></div>
+        <div class="tag">需登录</div>
+        <p>删除用户自定义事项（软删除：将 status 设为 0）。系统默认事项不可删除。</p>
+        <div>响应：</div>
+        <ul>
+          <li>200：删除成功</li>
+          <li>401：未登录</li>
+          <li>403：系统默认事项或他人事项，禁止删除</li>
+          <li>404：事项不存在</li>
+          <li>500：服务器内部错误</li>
+        </ul>
+      </div>
+
+      <!-- 每日待办：批量提交 -->
+      <div class="card" id="submit-daily-todos">
+        <div><span class="method post">POST</span><span class="path">/daily-todos</span></div>
+        <div class="tag">需登录</div>
+        <p>按日期批量新增每日待办（孩子 / 家长），同时为每条待办初始化一条未完成的打卡记录。</p>
+        <div>请求体：</div>
+        <pre>{
+  "todo_date": "2025-12-30",
+  "todos": [
+    {
+      "item_id": 1,
+      "child_id": 1,
+      "is_mandatory": 1,
+      "remark": "阅读《西游记》第5回"
+    },
+    {
+      "item_id": 2,
+      "child_id": null,
+      "is_mandatory": 0,
+      "remark": "作业包含数学口算"
+    }
+  ]
+}</pre>
+        <div>字段说明：</div>
+        <ul>
+          <li><code>todo_date</code>（必填）：日期，格式 <code>YYYY-MM-DD</code></li>
+          <li><code>todos</code>（必填）：待办数组</li>
+          <li><code>item_id</code>（必填）：关联 <code>todo_item_dict.id</code></li>
+          <li><code>child_id</code>（条件必填）：事项类型为孩子事项时必填，为家长事项时必须为 null</li>
+          <li><code>is_mandatory</code>（可选）：是否必做，1=是，0=否（默认 0）</li>
+          <li><code>remark</code>（可选）：备注</li>
+        </ul>
+      </div>
+
+      <!-- 每日待办：查询列表 -->
+      <div class="card" id="list-daily-todos">
+        <div><span class="method get">GET</span><span class="path">/daily-todos</span></div>
+        <div class="tag">需登录</div>
+        <p>查询每日待办计划，可按日期 / 范围 / 孩子 / 类型等维度过滤。每条记录会附带打卡状态与进度：<code>is_completed</code>、<code>checkin_time</code>、<code>progress_count</code>、<code>progress_duration_minutes</code>。</p>
+        <div>常用用法：</div>
+        <ul>
+          <li>不带参数：默认返回“今天”的所有有效待办</li>
+          <li><code>?todo_date=2025-12-30</code>：指定日期</li>
+          <li><code>?start_date=2025-12-01&amp;end_date=2025-12-31</code>：日期区间</li>
+          <li><code>?child_id=1</code>：指定孩子的待办</li>
+          <li><code>?child_id=null</code>：仅家长待办</li>
+          <li><code>?item_type=1</code>：仅孩子事项</li>
+          <li><code>?item_type=2</code>：仅家长事项</li>
+        </ul>
+      </div>
+
+      <!-- 每日待办：单条查询 / 更新 / 删除 -->
+      <div class="card" id="get-daily-todo">
+        <div><span class="method get">GET</span><span class="path">/daily-todos/:id</span></div>
+        <div class="tag">需登录</div>
+        <p>查询单条每日待办详情，包含打卡状态与进度：<code>is_completed</code>、<code>checkin_time</code>、<code>progress_count</code>、<code>progress_duration_minutes</code>。</p>
+      </div>
+
+      <div class="card" id="update-daily-todo">
+        <div><span class="method put">PUT</span><span class="path">/daily-todos/:id</span></div>
+        <div class="tag">需登录</div>
+        <p>更新每日待办，仅支持更新：是否必做、备注、状态等字段。</p>
+      </div>
+
+      <div class="card" id="delete-daily-todo">
+        <div><span class="method delete">DELETE</span><span class="path">/daily-todos/:id</span></div>
+        <div class="tag">需登录</div>
+        <p>删除每日待办（软删除：将 status 设为 0）。</p>
+      </div>
+
+      <!-- 打卡：更新 -->
+      <div class="card" id="update-checkin">
+        <div><span class="method put">PUT</span><span class="path">/checkin/:daily_todo_id</span></div>
+        <div class="tag">需登录</div>
+        <p>更新打卡记录（支持家长为孩子代打卡）。若记录不存在会自动创建。支持按次数/按时长事项的进度上报与自动完成判定。</p>
+        <div>请求体：</div>
+        <pre>{
+  "is_completed": 1,
+  "checkin_remark": "已完成，用时20分钟",
+  "progress_count": 3,
+  "progress_duration_minutes": 30
+}</pre>
+        <div>字段说明：</div>
+        <ul>
+          <li><code>is_completed</code>（必填）：0=未完成，1=已完成</li>
+          <li><code>checkin_remark</code>（可选）：打卡备注</li>
+          <li><code>progress_count</code>（可选）：当前累计完成次数，用于 <code>completion_type=2</code> 的事项；达到事项的 <code>completion_target</code> 时自动视为已完成</li>
+          <li><code>progress_duration_minutes</code>（可选）：当前累计时长（分钟），用于 <code>completion_type=3</code> 的事项；达到事项的 <code>completion_target</code> 时自动视为已完成</li>
+        </ul>
+        <p>响应中会包含 <code>completion_type</code>、<code>completion_target</code>、<code>completion_unit</code> 以及 <code>progress_count</code>、<code>progress_duration_minutes</code>。</p>
+      </div>
+
+      <!-- 打卡：单条查询 -->
+      <div class="card" id="get-checkin">
+        <div><span class="method get">GET</span><span class="path">/checkin/:daily_todo_id</span></div>
+        <div class="tag">需登录</div>
+        <p>查询某条每日待办对应的打卡记录。如尚未打卡，会返回未完成的默认状态。</p>
+      </div>
+
+      <!-- 打卡：按日期统计 -->
+      <div class="card" id="checkin-by-date">
+        <div><span class="method get">GET</span><span class="path">/checkin/date/:date</span></div>
+        <div class="tag">需登录</div>
+        <p>按某一天维度，查询当前家长名下所有待办的打卡情况，并附带统计数据。</p>
+      </div>
+
+      <!-- 打卡：按月份统计 -->
+      <div class="card" id="checkin-by-month">
+        <div><span class="method get">GET</span><span class="path">/checkin/month/:year/:month</span></div>
+        <div class="tag">需登录</div>
+        <p>按月份汇总打卡情况，既返回整月统计，又返回每天的统计信息。</p>
+      </div>
+
+      <!-- 说明 -->
+      <div class="card" id="notes">
+        <h2>全局说明</h2>
+        <ul>
+          <li>服务基础地址：<code>http://localhost:3000</code></li>
+          <li>所有需要登录的接口都需要在请求头中携带：
+            <pre>Authorization: Bearer &lt;jwt&gt;</pre>
+          </li>
+          <li>请求体统一使用 <code>Content-Type: application/json</code></li>
+          <li>密码存储使用 bcrypt 哈希（10 轮）</li>
+          <li>
+            双角色事项 / 待办设计：
+            <ul>
+              <li>事项层面：通过 <code>todo_item_dict.item_type</code> 区分孩子事项(1) / 家长事项(2)</li>
+              <li>待办层面：
+                <ul>
+                  <li>孩子待办：<code>child_id</code> 不为空，<code>user_id</code> 为对应家长 ID，关联 <code>item_type=1</code></li>
+                  <li>家长待办：<code>child_id</code> 为空，<code>user_id</code> 为家长自身 ID，关联 <code>item_type=2</code></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <li>
+            打卡与待办的关联：
+            <ul>
+              <li>一条每日待办（<code>daily_todo_plan</code>）对应一条打卡记录（<code>todo_checkin_record</code>）</li>
+              <li>创建待办时即初始化打卡记录（未完成，进度为 0），完成时更新打卡记录的状态和时间</li>
+            </ul>
+          </li>
+          <li>
+            完成条件与进度（<code>todo_item_dict</code> + <code>todo_checkin_record</code>）：
+            <ul>
+              <li><code>completion_type</code>：1=一次即完成，2=按次数完成，3=按时长完成；<code>completion_target</code> 为目标值，<code>completion_unit</code> 仅类型 3 使用（minute/second）</li>
+              <li>打卡记录扩展 <code>progress_count</code>、<code>progress_duration_minutes</code>；类型 2 时当 <code>progress_count &gt;= completion_target</code> 自动视为已完成，类型 3 时当 <code>progress_duration_minutes &gt;= completion_target</code> 自动视为已完成</li>
+            </ul>
+          </li>
         </ul>
       </div>
     </div>
   </div>
 </body>
 </html>
-

@@ -3,6 +3,9 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const childrenRoutes = require('./routes/children');
+const todoItemsRoutes = require('./routes/todoItems');
+const dailyTodosRoutes = require('./routes/dailyTodos');
+const checkinRoutes = require('./routes/checkin');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -60,6 +63,9 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/auth', authRoutes);
 app.use('/children', childrenRoutes);
+app.use('/todo-items', todoItemsRoutes);
+app.use('/daily-todos', dailyTodosRoutes);
+app.use('/checkin', checkinRoutes);
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 
