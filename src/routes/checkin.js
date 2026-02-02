@@ -7,7 +7,7 @@ const router = express.Router();
 // 更新打卡记录（支持家长/孩子打卡；支持按次数/按时长的进度与完成判定）
 router.put('/:daily_todo_id', authenticate, async (req, res) => {
   const { daily_todo_id } = req.params;
-  const { is_completed, checkin_remark, progress_count, progress_duration_minutes } = req.body || {};
+  const { is_completed, checkin_remark, progress_count, progress_count_delta, progress_duration_minutes } = req.body || {};
 
   if (is_completed === undefined || is_completed === null) {
     return res.status(400).json({ message: 'is_completed is required (0 or 1)' });
@@ -53,7 +53,9 @@ router.put('/:daily_todo_id', authenticate, async (req, res) => {
     const completionTarget = todo.completion_target != null ? Number(todo.completion_target) : null;
 
     // 按次数/按时长时：用进度判定是否完成，并可更新进度
+    // progress_count：覆盖为当前总值；progress_count_delta：在现有值上累加（跳绳等多次达成用）
     let effectiveCompleted = is_completed;
+    const hasDelta = progress_count_delta !== undefined && progress_count_delta !== null;
     let progressCountVal = progress_count !== undefined && progress_count !== null ? Number(progress_count) : null;
     let progressDurationVal = progress_duration_minutes !== undefined && progress_duration_minutes !== null ? Number(progress_duration_minutes) : null;
 
@@ -62,14 +64,17 @@ router.put('/:daily_todo_id', authenticate, async (req, res) => {
       [daily_todo_id]
     );
 
-    if (checkinRows.length > 0) {
-      const existing = checkinRows[0];
-      if (progressCountVal === null) progressCountVal = existing.progress_count != null ? existing.progress_count : 0;
-      if (progressDurationVal === null) progressDurationVal = existing.progress_duration_minutes != null ? existing.progress_duration_minutes : 0;
-    } else {
-      if (progressCountVal === null) progressCountVal = 0;
-      if (progressDurationVal === null) progressDurationVal = 0;
+    const currentCount = checkinRows.length > 0 && checkinRows[0].progress_count != null ? Number(checkinRows[0].progress_count) : 0;
+    const currentDuration = checkinRows.length > 0 && checkinRows[0].progress_duration_minutes != null ? Number(checkinRows[0].progress_duration_minutes) : 0;
+
+    if (hasDelta) {
+      // 累加：新值 = 当前值 + delta，不低于 0
+      const delta = Number(progress_count_delta);
+      progressCountVal = Math.max(0, currentCount + delta);
+    } else if (progressCountVal === null) {
+      progressCountVal = currentCount;
     }
+    if (progressDurationVal === null) progressDurationVal = currentDuration;
 
     if (completionType === 2 && completionTarget != null && progressCountVal >= completionTarget) {
       effectiveCompleted = 1;

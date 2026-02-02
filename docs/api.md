@@ -411,6 +411,7 @@ Authorization: Bearer <jwt_token>
   "is_completed": 1,
   "checkin_remark": "已完成，用时20分钟",
   "progress_count": 3,
+  "progress_count_delta": 1,
   "progress_duration_minutes": 30
 }
 ```
@@ -418,10 +419,11 @@ Authorization: Bearer <jwt_token>
 **字段说明**：
 - `is_completed`（必填）：0=未完成，1=已完成
 - `checkin_remark`（可选）：打卡备注
-- `progress_count`（可选）：当前累计完成次数，用于 `completion_type=2` 的事项
+- `progress_count`（可选，**覆盖**）：当前累计完成次数的总值，用于 `completion_type=2`；与 `progress_count_delta` 二选一
+- `progress_count_delta`（可选，**累加**）：在现有 `progress_count` 上增加次数（如跳绳每次达成传 1），用于多次达成目标；与 `progress_count` 二选一，传本字段时按累加
 - `progress_duration_minutes`（可选）：当前累计时长（分钟），用于 `completion_type=3` 的事项
 
-响应中会包含 `completion_type`、`completion_target`、`completion_unit` 以及 `progress_count`、`progress_duration_minutes`。
+响应中会包含 `completion_type`、`completion_target`、`completion_unit` 以及更新后的 `progress_count`、`progress_duration_minutes`。
 
 ---
 
@@ -429,7 +431,39 @@ Authorization: Bearer <jwt_token>
 
 **标签**：需登录
 
-查询某条每日待办对应的打卡记录。如尚未打卡，会返回未完成的默认状态。
+查询某条每日待办对应的打卡记录，响应包含 `completion_target`、`progress_count`、`is_completed` 等。如尚未打卡，会返回未完成的默认状态。
+
+**响应 200 完整结构**：
+```json
+{
+  "message": "Success",
+  "data": {
+    "id": 1,
+    "daily_todo_id": 15,
+    "checkin_user_id": 2,
+    "is_completed": 0,
+    "checkin_time": null,
+    "checkin_remark": null,
+    "progress_count": 0,
+    "progress_duration_minutes": 0,
+    "create_time": "2026-01-31T03:37:21.000Z",
+    "update_time": "2026-01-31T03:37:21.000Z",
+    "todo_date": "2026-01-31T00:00:00.000Z",
+    "child_id": null,
+    "item_name": "亲子爱心信",
+    "item_type": 2,
+    "item_category": null,
+    "path_url": "/pages/mine/love-letter",
+    "completion_type": 1,
+    "completion_target": null,
+    "completion_unit": null,
+    "child_name": null
+  }
+}
+```
+
+- 有打卡记录时：`data` 包含上表所有字段；`completion_type`/`completion_target`/`completion_unit` 来自事项字典。
+- 无打卡记录时：`data` 无 `id`、`checkin_user_id`、`create_time`、`update_time`；`is_completed`=0、`progress_count`=0、`progress_duration_minutes`=0、`checkin_time`=null、`checkin_remark`=null；其余为待办与事项信息。
 
 ---
 

@@ -464,23 +464,52 @@
   "is_completed": 1,
   "checkin_remark": "已完成，用时20分钟",
   "progress_count": 3,
+  "progress_count_delta": 1,
   "progress_duration_minutes": 30
 }</pre>
         <div>字段说明：</div>
         <ul>
           <li><code>is_completed</code>（必填）：0=未完成，1=已完成</li>
           <li><code>checkin_remark</code>（可选）：打卡备注</li>
-          <li><code>progress_count</code>（可选）：当前累计完成次数，用于 <code>completion_type=2</code> 的事项；达到事项的 <code>completion_target</code> 时自动视为已完成</li>
+          <li><code>progress_count</code>（可选，覆盖）：当前累计完成次数的总值，用于 <code>completion_type=2</code>；与 <code>progress_count_delta</code> 二选一</li>
+          <li><code>progress_count_delta</code>（可选，累加）：在现有 <code>progress_count</code> 上增加次数（如跳绳每次达成传 1），用于多次达成目标；与 <code>progress_count</code> 二选一，传本字段时按累加</li>
           <li><code>progress_duration_minutes</code>（可选）：当前累计时长（分钟），用于 <code>completion_type=3</code> 的事项；达到事项的 <code>completion_target</code> 时自动视为已完成</li>
         </ul>
-        <p>响应中会包含 <code>completion_type</code>、<code>completion_target</code>、<code>completion_unit</code> 以及 <code>progress_count</code>、<code>progress_duration_minutes</code>。</p>
+        <p>响应中会包含 <code>completion_type</code>、<code>completion_target</code>、<code>completion_unit</code> 以及更新后的 <code>progress_count</code>、<code>progress_duration_minutes</code>。</p>
       </div>
 
       <!-- 打卡：单条查询 -->
       <div class="card" id="get-checkin">
         <div><span class="method get">GET</span><span class="path">/checkin/:daily_todo_id</span></div>
         <div class="tag">需登录</div>
-        <p>查询某条每日待办对应的打卡记录。如尚未打卡，会返回未完成的默认状态。</p>
+        <p>查询某条每日待办对应的打卡记录，响应包含 <code>completion_target</code>、<code>progress_count</code>、<code>is_completed</code> 等。如尚未打卡，会返回未完成的默认状态。</p>
+        <div>响应 200 结构：</div>
+        <pre>{
+  "message": "Success",
+  "data": {
+    "id": 1,
+    "daily_todo_id": 15,
+    "checkin_user_id": 2,
+    "is_completed": 0,
+    "checkin_time": null,
+    "checkin_remark": null,
+    "progress_count": 0,
+    "progress_duration_minutes": 0,
+    "create_time": "2026-01-31T03:37:21.000Z",
+    "update_time": "2026-01-31T03:37:21.000Z",
+    "todo_date": "2026-01-31T00:00:00.000Z",
+    "child_id": null,
+    "item_name": "亲子爱心信",
+    "item_type": 2,
+    "item_category": null,
+    "path_url": "/pages/mine/love-letter",
+    "completion_type": 1,
+    "completion_target": null,
+    "completion_unit": null,
+    "child_name": null
+  }
+}</pre>
+        <p>无打卡记录时 <code>data</code> 无 <code>id</code>，且 <code>is_completed</code>=0、<code>progress_count</code>=0、<code>checkin_time</code>=null，其余字段同待办与事项信息。</p>
       </div>
 
       <!-- 打卡：按日期统计 -->
